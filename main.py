@@ -1,7 +1,17 @@
 from fastapi import FastAPI, Body
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+from typing import Optional
 
-movies = [
+class Movie(BaseModel):
+    id: Optional[int] = None
+    title: str
+    overview: str
+    year: int
+    rating: float
+    category: str
+
+movies: list[Movie] = [
     {
         'id': 1,
         'title': 'Avatar',
@@ -54,36 +64,36 @@ def get_movie_by_category(title: str = '', overview: str = '', category: str = '
     return [movie for movie in movies if filter(movie)]
 
 @app.post('/movies', tags=['movies'])
-def create_movie(id: int = Body(), title: str = Body(), overview: str = Body(), category: str = Body(), year: int = Body(), rating: float = Body()):
-    if id < 0 or title == '' or category == "":
+def create_movie(movie: Movie):
+    if movie.id < 0 or movie.title == '' or movie.category == "":
         return 'Invalid input'
-    for movie in movies:
-        if movie['id'] == id:
+    for m in movies:
+        if m['id'] == movie.id:
             return 'Movie already exist'
     movies.append({
-        'id': id,
-        "title": title,
-        'overview': overview,
-        'category': category,
-        'year': year,
-        'rating': rating
+        'id': movie.id,
+        'title': movie.title,
+        'overview': movie.overview,
+        'year': movie.year,
+        'rating': movie.rating,
+        'category': movie.category
     })
     return movies
 
 @app.put('/movies/{id}', tags=['movies'])
-def update_movie(id: int, title: str = Body(), overview: str = Body(), category: str = Body(), year: int = Body(), rating: float = Body()):
+def update_movie(id: int, movie: Movie):
     if id < 0:
         return f'invalid id: {id}'
     exist = False
-    for movie in movies:
-        if movie['id'] == id:
-            movie.update({
+    for m in movies:
+        if m['id'] == id:
+            m.update({
                 "id": id,
-                "title": title,
-                'overview': overview,
-                'category': category,
-                'year': year,
-                'rating': rating
+                "title": movie.title,
+                'overview': movie.overview,
+                'category': movie.category,
+                'year': movie.year,
+                'rating': movie.rating
             })
             exist = True
     if not exist: return f'movie with id {id} do not exist'
